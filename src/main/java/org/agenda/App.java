@@ -6,6 +6,8 @@ import org.agenda.model.EmailRequest;
 import org.agenda.model.EmailRequestPayload;
 import org.agenda.model.MessageBody;
 import org.agenda.services.MessageServices;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -22,6 +24,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class App {
+    private static final Logger logger = LoggerFactory.getLogger(App.class);
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
@@ -37,6 +40,7 @@ public class App {
 
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         scheduler.scheduleAtFixedRate(app::sendEmailRequests, getDelayToNextExecution(), 1, TimeUnit.DAYS);
+        logger.info("Application started and scheduler initialized.");
     }
 
     public void sendEmailRequests() {
@@ -44,7 +48,9 @@ public class App {
         pagamentos.add("faculdade");
         pagamentos.add("internet");
 
+        logger.info("Starting to send email requests for {} pagamentos", pagamentos.size());
         for (String pagamento : pagamentos) {
+            logger.debug("Sending email request for: {}", pagamento);
             sendEmailRequest(pagamento);
         }
     }
@@ -65,7 +71,7 @@ public class App {
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             System.out.println(response.body());
         } catch (URISyntaxException | IOException | InterruptedException e) {
-            e.printStackTrace();
+            logger.error("Error sending email request for type: {}", type, e);
         }
     }
 
@@ -96,7 +102,8 @@ public class App {
         if (now.isAfter(nextExecution)) {
             nextExecution = nextExecution.plusMonths(1);
         }
-
-        return now.until(nextExecution, ChronoUnit.SECONDS);
+        long delay = now.until(nextExecution, ChronoUnit.SECONDS);
+        logger.debug("Calculated delay to next execution: {} seconds", delay);
+        return delay;
     }
 }
