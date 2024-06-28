@@ -38,9 +38,17 @@ public class App {
         ObjectMapper objectMapper = new ObjectMapper();
         App app = new App(httpClient, objectMapper);
 
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(app::sendEmailRequests, getDelayToNextExecution(), 1, TimeUnit.DAYS);
-        logger.info("Application started and scheduler initialized.");
+        // Inicia o loop infinito para enviar emails
+        while (true) {
+            try {
+                app.sendEmailRequests();
+                // Intervalo de espera entre iterações (por exemplo, 1 dia)
+                TimeUnit.DAYS.sleep(1);
+            } catch (InterruptedException e) {
+                logger.error("Interrupted while waiting to send emails", e);
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     public void sendEmailRequests() {
