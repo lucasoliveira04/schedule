@@ -9,12 +9,10 @@ COPY . .
 
 RUN mvn clean install
 
-# Estágio de produção
 FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-COPY --from=build /target/agenda_api-1.0-SNAPSHOT.jar app.jar
+COPY --from=build ./target/agenda_api-1.0.jar app.jar
 
-# Corrigido: ENTRYPOINT para iniciar o JAR corretamente
 ENTRYPOINT ["java", "-jar", "app.jar"]
