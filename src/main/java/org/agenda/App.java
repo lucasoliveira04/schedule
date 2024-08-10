@@ -38,17 +38,20 @@ public class App {
         ObjectMapper objectMapper = new ObjectMapper();
         App app = new App(httpClient, objectMapper);
 
-        // Inicia o loop infinito para enviar emails
-        while (true) {
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+        // Calcula o atraso até o próximo dia 5
+        long initialDelay = getDelayToNextExecution();
+        scheduler.scheduleAtFixedRate(() -> {
             try {
                 app.sendEmailRequests();
-                // Intervalo de espera entre iterações (por exemplo, 1 dia)
-                TimeUnit.DAYS.sleep(getDelayToNextExecution());
-            } catch (InterruptedException e) {
-                logger.error("Interrupted while waiting to send emails", e);
-                Thread.currentThread().interrupt();
+                // Recalcula o atraso para o próximo dia 5
+                long delay = getDelayToNextExecution();
+                scheduler.schedule(() -> {}, delay, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                logger.error("Error during scheduled email sending", e);
             }
-        }
+        }, initialDelay, TimeUnit.DAYS.toSeconds(30), TimeUnit.SECONDS);
     }
 
     public void sendEmailRequests() {
@@ -103,6 +106,14 @@ public class App {
         return new EmailRequestPayload(configurationMail, emailRequest);
     }
 
+    private static String getFormattedDelay(long seconds){
+        long days = seconds / (24 * 3600);
+        long hours = (seconds % (24 * 3600)) / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long secs = seconds % 60;
+        return String.format("%d days, %d hours, %d minutes, %d seconds", days, hours, minutes, secs);
+    }
+
     private static long getDelayToNextExecution() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime nextExecution = LocalDateTime.of(now.getYear(), now.getMonthValue(), 5, 0, 0);
@@ -111,7 +122,8 @@ public class App {
             nextExecution = nextExecution.plusMonths(1);
         }
         long delay = now.until(nextExecution, ChronoUnit.SECONDS);
-        logger.debug("Calculated delay to next execution: {} seconds", delay);
+        String formattedDelay = getFormattedDelay(delay);
+        logger.debug("Calculated delay to next execution: {} seconds", formattedDelay);
         return delay;
     }
 }
