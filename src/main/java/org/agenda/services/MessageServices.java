@@ -16,7 +16,7 @@ public class MessageServices {
 
     private static void faculdade(MessageBody messageBody) {
         messageBody.setTitle("PAGAR MENSALIDADE DA FACULDADE");
-        double valor = 400;
+        double valor = 149.50;
         messageBody.setMessage("REALIZAR PAGAMENTO DA MENSALIDADE. \nVALOR: " + valor + " Url : https://aluno.uninove.br/seu/CENTRAL/aluno//central.php");
     }
 
