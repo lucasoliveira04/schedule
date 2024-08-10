@@ -43,7 +43,7 @@ public class App {
             try {
                 app.sendEmailRequests();
                 // Intervalo de espera entre iterações (por exemplo, 1 dia)
-                TimeUnit.DAYS.sleep(1);
+                TimeUnit.DAYS.sleep(getDelayToNextExecution());
             } catch (InterruptedException e) {
                 logger.error("Interrupted while waiting to send emails", e);
                 Thread.currentThread().interrupt();
